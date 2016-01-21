@@ -5,6 +5,10 @@ require 'nokogiri'              # XML parser
 require 'active_model'          # for validations
 
 class OracleOfBacon
+  OOBURI = 'http://oracleofbacon.org/cgi-bin/xml'
+  DEFAULT_FROM = 'Kevin Bacon'
+  DEFAULT_TO = 'Kevin Bacon'
+
   class InvalidError < RuntimeError; end
   class NetworkError < RuntimeError; end
   class InvalidKeyError < RuntimeError; end
@@ -24,9 +28,8 @@ class OracleOfBacon
 
   def initialize(api_key = '38b99ce9ec87')
     @api_key = api_key
-    # TODO: Fix initialization to hashes
-    @from = 'Kevin Bacon'
-    @to = 'Kevin Bacon'
+    self.from = DEFAULT_FROM
+    self.to = DEFAULT_TO
   end
 
   def find_connections
@@ -46,6 +49,8 @@ class OracleOfBacon
   def make_uri_from_arguments
     # your code here: set the @uri attribute to properly-escaped URI
     #   constructed from the @from, @to, @api_key arguments
+    @uri = "#{OOBURI}?p=#{CGI.escape(self.api_key)}"
+    @uri += "&a=#{CGI.escape(self.from)}&b=#{CGI.escape(self.to)}"
   end
 
   class Response
