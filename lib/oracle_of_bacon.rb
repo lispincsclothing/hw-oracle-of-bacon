@@ -5,10 +5,9 @@ require 'nokogiri'              # XML parser
 require 'active_model'          # for validations
 
 class OracleOfBacon
-
-  class InvalidError < RuntimeError ; end
-  class NetworkError < RuntimeError ; end
-  class InvalidKeyError < RuntimeError ; end
+  class InvalidError < RuntimeError; end
+  class NetworkError < RuntimeError; end
+  class InvalidKeyError < RuntimeError; end
 
   attr_accessor :from, :to
   attr_reader :api_key, :response, :uri
@@ -20,12 +19,12 @@ class OracleOfBacon
   validate :from_does_not_equal_to
 
   def from_does_not_equal_to
-      self.errors.add(:from, 'From cannot be the same as To') if  @from == @to
+    errors.add(:from, 'From cannot be the same as To') if @from == @to
   end
 
-  def initialize(api_key='38b99ce9ec87')
+  def initialize(api_key = '38b99ce9ec87')
     @api_key = api_key
-    # TODO Fix initialization to hashes
+    # TODO: Fix initialization to hashes
     @from = 'Kevin Bacon'
     @to = 'Kevin Bacon'
   end
@@ -35,8 +34,8 @@ class OracleOfBacon
     begin
       xml = URI.parse(uri).read
     rescue Timeout::Error, Errno::EINVAL, Errno::ECONNRESET, EOFError,
-      Net::HTTPBadResponse, Net::HTTPHeaderSyntaxError,
-      Net::ProtocolError => e
+           Net::HTTPBadResponse, Net::HTTPHeaderSyntaxError,
+           Net::ProtocolError => e
       # convert all of these into a generic OracleOfBacon::NetworkError,
       #  but keep the original error message
       # your code here
@@ -65,11 +64,34 @@ class OracleOfBacon
       # your code here: 'elsif' clauses to handle other responses
       # for responses not matching the 3 basic types, the Response
       # object should have type 'unknown' and data 'unknown response'
+      elsif ! @doc.xpath('/link').empty?
+        parse_graph_response
+      elsif ! @doc.xpath('/spellcheck').empty?
+        parse_spellcheck_response
+      else
+        parse_unknown_response
       end
     end
+
     def parse_error_response
       @type = :error
       @data = 'Unauthorized access'
+    end
+    def parse_graph_response
+      @type = :graph
+      # http://stackoverflow.com/questions/1961030/ruby-ampersand-colon-shortcut
+      actors = @doc.xpath('//actor').map(&:text)
+      movies = @doc.xpath('//movie').map(&:text)
+      # Using compact to remove nil elements
+      @data = actors.zip(movies).flatten.compact
+    end
+    def parse_spellcheck_response
+      @type = :spellcheck
+      @data = @doc.xpath('//match').map(&:text)
+    end
+    def parse_unknown_response
+      @type = :unknown
+      @data = 'unknown response type'
     end
   end
 end
