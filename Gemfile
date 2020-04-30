@@ -4,7 +4,7 @@ ruby '2.2.3'
 
 gem 'nokogiri'
 gem 'byebug'
-gem 'activemodel', '4.2.1'
+gem 'activemodel', '4.2.8'
 
 group :test do
   gem 'fakeweb'
